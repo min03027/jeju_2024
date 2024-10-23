@@ -33,6 +33,7 @@ with st.sidebar:
     st.subheader("언드레 가신디가?")
     time = st.sidebar.selectbox("", ["아침", "점심", "오후", "저녁", "밤"], key="time")
     opening_date_condition = st.sidebar.selectbox("", ["오래된 맛집", "요즘 뜨는 곳"], key="Opening_date", label_visibility="hidden")
+    month = st.sidebar.selectbox("", ["1월", "2월", "3월", "4월", "5월","6월", "7월", "8월", "9월", "10월", "11월", "12월"], key="month_data")
     local_choice = st.radio('', ('제주도민 맛집', '관광객 맛집'))
 
 # 타이틀 및 설명
