@@ -66,7 +66,7 @@ with st.sidebar:
     )
 
     time = st.sidebar.selectbox("", ["아침", "점심", "오후", "저녁", "밤"], key="time")
-    Opening_date = st.sidebar.selectbox("",["오래된 맛집", "요즘 뜨는 곳"], key="Opening_date")
+    opening_date_condition = st.sidebar.selectbox("",["오래된 맛집", "요즘 뜨는 곳"], key="Opening_date")
 
     st.write("")
 
@@ -215,7 +215,6 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
     # 현재 년도 가져오기
     current_year = datetime.now().year
  # 사이드바에서 선택 (사용자가 입력)
-    opening_date_condition = st.sidebar.selectbox("선택하세요", ["오래된 맛집", "요즘 뜨는 곳"], key="time")
 
 # 가맹점개설일자 기준으로 필터링
     if opening_date_condition == "오래된 맛집":
