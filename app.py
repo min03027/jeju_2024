@@ -215,7 +215,14 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
 
     # 현재 년도 가져오기
     #current_year = datetime.now().year
- 
+    def extract_year_and_filter(x):
+        if isinstance(x, str) and len(x) >= 4:
+            year = int(x[:4])
+            return 2024 - year >= 20
+        return False
+
+    filtered_df = df[df['가맹점개설일자'].apply(extract_year_and_filter)]
+
     # 필터링 로직
     if opening_date_condition == "오래된 맛집":
         filtered_df = df[df['가맹점개설일자'].apply(lambda x: 2024 - int(x[:4]) >= 20)]
