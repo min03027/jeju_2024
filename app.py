@@ -214,13 +214,13 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
     # df['가맹점개설일자'] = df['가맹점개설일자'].astype(str)
 
     # 현재 년도 가져오기
-    current_year = datetime.now().year
+    #current_year = datetime.now().year
  
     # 필터링 로직
     if opening_date_condition == "오래된 맛집":
-        filtered_df = df[df['가맹점개설일자'].apply(lambda x: current_year - int(x[:4]) >= 20)]
+        filtered_df = df[df['가맹점개설일자'].apply(lambda x: 2024 - int(x[:4]) >= 20)]
     elif opening_date_condition == "요즘 뜨는 곳":
-        filtered_df = df[df['가맹점개설일자'].apply(lambda x: current_year - int(x[:4]) <= 5)]
+        filtered_df = df[df['가맹점개설일자'].apply(lambda x: 2024 - int(x[:4]) <= 5)]
 
     # 중간 결과 확인 (디버깅용)
     #st.write("필터링된 데이터:", filtered_df)
