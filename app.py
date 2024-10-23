@@ -66,7 +66,7 @@ with st.sidebar:
     )
 
     time = st.sidebar.selectbox("", ["아침", "점심", "오후", "저녁", "밤"], key="time")
-    opening_date_condition = st.sidebar.selectbox("",["오래된 맛집", "요즘 뜨는 곳"], key="Opening_date")
+    opening_date_condition = st.sidebar.selectbox("",["오래된 맛집", "요즘 뜨는 곳"], key="Opening_date", label_visibility="hidden")
 
     st.write("")
 
@@ -214,15 +214,17 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
 
     # 현재 년도 가져오기
     current_year = datetime.now().year
- # 사이드바에서 선택 (사용자가 입력)
-
-# 가맹점개설일자 기준으로 필터링
+ 
+    # 필터링 로직
     if opening_date_condition == "오래된 맛집":
-        filtered_df = df[df['가맹점개설일자'].apply(lambda x: current_year - int(str(x)[:4]) >= 20)]
+        filtered_df = df[df['가맹점개설일자'].apply(lambda x: current_year - int(x[:4]) >= 20)]
     elif opening_date_condition == "요즘 뜨는 곳":
-        filtered_df = df[df['가맹점개설일자'].apply(lambda x: current_year - int(str(x)[:4]) <= 5)]
+        filtered_df = df[df['가맹점개설일자'].apply(lambda x: current_year - int(x[:4]) <= 5)]
 
-# 필터링된 데이터가 없을 때 처리
+    # 중간 결과 확인 (디버깅용)
+    #st.write("필터링된 데이터:", filtered_df)
+
+    # 필터링된 데이터가 없을 때 처리
     if filtered_df.empty:
         st.write(f"선택하신 조건({opening_date_condition})에 맞는 가게가 없습니다.")
     else:
