@@ -97,14 +97,11 @@ suggested_restaurants = [
     "오메기떡 가게"
 ]
 
-# 응답 생성 함수
-def generate_response_with_faiss(question, df, embeddings, model, embed_text, time, local_choice, index_path=os.path.join(module_path, 'faiss_index.index'), max_count=10, k=3):
-    index = load_faiss_index(index_path)
+# 조건에 따른 필터링 함수
+def filter_restaurants(df, time, opening_date_condition):
+    filtered_df = df
 
-    query_embedding = embed_text(question).reshape(1, -1)
-    distances, indices = index.search(query_embedding, k*3)
-    filtered_df = df.iloc[indices[0, :]].copy().reset_index(drop=True)
-
+    # 영업시간 조건
     if time == '아침':
         filtered_df = filtered_df[filtered_df['영업시간'].apply(lambda x: isinstance(eval(x), list) and any(hour in eval(x) for hour in range(5, 12)))].reset_index(drop=True)
     elif time == '점심':
@@ -116,25 +113,45 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
     elif time == '밤':
         filtered_df = filtered_df[filtered_df['영업시간'].apply(lambda x: isinstance(eval(x), list) and any(hour in eval(x) for hour in [23, 24, 1, 2, 3, 4]))].reset_index(drop=True)
 
-    current_year = datetime.now().year
+    # 개설일자 필터링
     if opening_date_condition == "오래된 맛집":
         filtered_df = filtered_df[filtered_df['가맹점개설일자'].apply(lambda x: 2024 - int(str(x)[:4]) >= 20)]
     elif opening_date_condition == "요즘 뜨는 곳":
         filtered_df = filtered_df[filtered_df['가맹점개설일자'].apply(lambda x: 2024 - int(str(x)[:4]) <= 5)]
 
-    # 필터링된 데이터가 없을 때 처리
+    return filtered_df
+
+# 응답 생성 함수
+def generate_response_with_faiss(question, df, embeddings, model, embed_text, time, local_choice):
+    index = load_faiss_index()
+
+    query_embedding = embed_text(question).reshape(1, -1)
+    distances, indices = index.search(query_embedding, 9)  # 최대 9개 검색
+    filtered_df = df.iloc[indices[0, :]].copy().reset_index(drop=True)
+
+    # 필터링
+    filtered_df = filter_restaurants(filtered_df, time, opening_date_condition)
+
+    # 결과가 없을 경우 조건을 하나씩 제외하며 재추천
     if filtered_df.empty:
-        # 다른 맛집 추천
+        if opening_date_condition == "오래된 맛집":
+            # 10년으로 변경하여 재필터링
+            filtered_df = df[df['가맹점개설일자'].apply(lambda x: 2024 - int(str(x)[:4]) >= 10)]
+        else:
+            conditions = ["오래된 맛집", "요즘 뜨는 곳"]
+            for condition in conditions:
+                # 현재 조건을 제외한 필터링
+                temp_df = filter_restaurants(df, time, condition if condition != opening_date_condition else conditions[0])
+                if not temp_df.empty:
+                    filtered_df = temp_df
+                    break
+
+    # 결과가 없으면 추천
+    if filtered_df.empty:
         suggested = random.choice(suggested_restaurants)
         return f"선택하신 조건에 맞는 가게가 없습니다. 대신, '{suggested}'를 추천드립니다!"
 
-    filtered_df = filtered_df.reset_index(drop=True).head(k)
-    
-    if local_choice == '제주도민 맛집':
-        local_choice = '제주도민(현지인) 맛집'
-    elif local_choice == '관광객 맛집':
-        local_choice = '현지인 비중이 낮은 관광객 맛집'
-
+    # 응답 생성
     reference_info = "\n".join(filtered_df['text'].tolist())
     prompt = f"질문: {question} 특히 {local_choice}을 선호해\n참고할 정보:\n{reference_info}\n응답:"
 
@@ -153,4 +170,5 @@ if st.session_state.messages[-1]["role"] != "assistant":
         with st.spinner("Thinking..."):
             response = generate_response_with_faiss(prompt, df, embeddings, model, embed_text, time, local_choice)
             st.markdown(response)
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st
+
