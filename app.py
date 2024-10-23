@@ -22,7 +22,7 @@ import google.generativeai as genai
 
 # GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 
-genai.configure(api_key="AIzaSyDBTq1ywB7EtqH8dmiNHmBCiTmdtAvmkHw")
+genai.configure(api_key="AIzaSyBGz5a1hHRTydsOlaeNb5OdY7NTZR5--lU")
 
 # Gemini 모델 선택
 model = genai.GenerativeModel("gemini-1.5-flash")
