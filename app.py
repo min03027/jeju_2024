@@ -213,6 +213,8 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
     # 오래된 맛집과 요즘 뜨는 곳
 
     # 현재 년도 가져오기
+    df['가맹점개설일자'] = df['가맹점개설일자'].astype(str)
+
     current_year = datetime.now().year
  
     # 필터링 로직
