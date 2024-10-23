@@ -118,7 +118,7 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
 
     current_year = datetime.now().year
     if opening_date_condition == "오래된 맛집":
-        filtered_df = filtered_df[filtered_df['가맹점개설일자'].apply(lambda x: 2024 - int(str(x)[:4]) >= 15)]
+        filtered_df = filtered_df[filtered_df['가맹점개설일자'].apply(lambda x: 2024 - int(str(x)[:4]) >= 10)]
     elif opening_date_condition == "요즘 뜨는 곳":
         filtered_df = filtered_df[filtered_df['가맹점개설일자'].apply(lambda x: 2024 - int(str(x)[:4]) <= 5)]
 
