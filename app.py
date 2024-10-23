@@ -85,17 +85,6 @@ def embed_text(text):
 # 임베딩 로드
 embeddings = np.load(os.path.join(module_path, 'embeddings_array_file.npy'))
 
-# 추천할 맛집 목록
-suggested_restaurants = [
-    "제주도 흑돼지 맛집", 
-    "갈치조림 전문점", 
-    "옥돔구이 맛집", 
-    "고사리해장국 집", 
-    "전복뚝배기 전문점", 
-    "한치물회 집", 
-    "빙떡 카페", 
-    "오메기떡 가게"
-]
 
 # 응답 생성 함수
 def generate_response_with_faiss(question, df, embeddings, model, embed_text, time, local_choice, index_path=os.path.join(module_path, 'faiss_index.index'), max_count=10, k=3):
@@ -125,8 +114,7 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
     # 필터링된 데이터가 없을 때 처리
     if filtered_df.empty:
         # 다른 맛집 추천
-        suggested = random.choice(suggested_restaurants)
-        return f"선택하신 조건에 맞는 가게가 없습니다. 대신, '{suggested}'를 추천드립니다!"
+        return f"선택하신 조건에 맞는 가게가 없습니다."
 
     filtered_df = filtered_df.reset_index(drop=True).head(k)
     
