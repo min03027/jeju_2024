@@ -6,6 +6,7 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 from tqdm import tqdm
 import faiss
+from datetime import datetime
 
 import streamlit as st
 
@@ -208,6 +209,25 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
         return f"현재 선택하신 시간대({time})에는 영업하는 가게가 없습니다."
 
     filtered_df = filtered_df.reset_index(drop=True).head(k)
+
+    # 오래된 맛집과 요즘 뜨는 곳
+
+    # 현재 년도 가져오기
+    current_year = datetime.now().year
+ # 사이드바에서 선택 (사용자가 입력)
+    opening_date_condition = st.sidebar.selectbox("선택하세요", ["오래된 맛집", "요즘 뜨는 곳"], key="time")
+
+# 가맹점개설일자 기준으로 필터링
+    if opening_date_condition == "오래된 맛집":
+        filtered_df = df[df['가맹점개설일자'].apply(lambda x: current_year - int(str(x)[:4]) >= 20)]
+    elif opening_date_condition == "요즘 뜨는 곳":
+        filtered_df = df[df['가맹점개설일자'].apply(lambda x: current_year - int(str(x)[:4]) <= 5)]
+
+# 필터링된 데이터가 없을 때 처리
+    if filtered_df.empty:
+        st.write(f"선택하신 조건({opening_date_condition})에 맞는 가게가 없습니다.")
+    else:
+        st.write(filtered_df)
 
 
     # 현지인 맛집 옵션
