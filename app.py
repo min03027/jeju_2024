@@ -155,20 +155,12 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
     reference_info = "\n".join(filtered_df['text'].tolist())
     prompt = f"질문: {question} 특히 {local_choice}을 선호해\n참고할 정보:\n{reference_info}\n응답:"
 
-    response = model.generate_content(prompt)
-    return response.text if hasattr(response, 'text') else str(response)
-
-# 사용자 입력 처리
-if prompt := st.chat_input():
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
-
-# 응답 생성
-if st.session_state.messages[-1]["role"] != "assistant":
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = generate_response_with_faiss(prompt, df, embeddings, model, embed_text, time, local_choice)
-            st.markdown(response)
-    st
+    try:
+        response = model.generate_content(prompt)
+        if hasattr(response, 'text'):
+            return response.text
+        else:
+            return "응답을 생성하는 중 오류가 발생했습니다."
+    except Exception as e:
+        return f"오류가 발생했습니다: {str(e)}"
 
