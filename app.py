@@ -112,6 +112,13 @@ def generate_response_with_faiss(question, df, embeddings, model, embed_text, ti
     elif opening_date_condition == "요즘 뜨는 곳":
         filtered_df = filtered_df[filtered_df['가맹점개설일자'].apply(lambda x: 2024 - int(str(x)[:4]) <= 5)]
 
+    if month =='1월':
+        filtered_df = 
+
+
+
+
+
     # 필터링된 데이터가 없을 때 처리
     if filtered_df.empty:
         # 다른 맛집 추천
