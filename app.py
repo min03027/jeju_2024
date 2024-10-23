@@ -65,6 +65,7 @@ with st.sidebar:
     )
 
     time = st.sidebar.selectbox("", ["아침", "점심", "오후", "저녁", "밤"], key="time")
+    Opening_date = st.sidebar.selectbox("",["오래된 맛집", "요즘 뜨는 곳"], key="Opening_date")
 
     st.write("")
 
