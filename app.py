@@ -26,7 +26,6 @@ genai.configure(api_key="AIzaSyAsX-SMGt5XlHc6i8TATucxPX3qCDbVyJI")
 # Gemini 모델 선택
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-
 # CSV 파일 로드
 ## 자체 전처리를 거친 데이터 파일 활용
 csv_file_path = "JEJU_DATA_geo.csv"
