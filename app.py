@@ -18,8 +18,10 @@ genai.configure(api_key="AIzaSyAsX-SMGt5XlHc6i8TATucxPX3qCDbVyJI")
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 # CSV 파일 로드
-csv_file_path = "JEJU_MCT_DATA_modified.csv"
-df = pd.read_csv(os.path.join(data_path, csv_file_path))
+csv_file_path = "data/JEJU_DATA.csv"
+df = pd.read_csv(csv_file_path, encoding='cp949')
+#xlsx_file_path = "data/제주_관광수요_예측_데이터merged1.xlsx"
+#visit_df= pd.read_excel(xlsx_file_path)
 
 # 최신연월 데이터만 가져옴
 df = df[df['기준연월'] == df['기준연월'].max()].reset_index(drop=True)
