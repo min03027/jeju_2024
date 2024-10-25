@@ -13,8 +13,7 @@ module_path = './modules'
 
 # Gemini 모델 설정
 import google.generativeai as genai
-
-GOOGLE_API_KEY = st.secrets["API_KEY"]
+GOOGLE_API_KEY = st.secrets["AIzaSyDBTq1ywB7EtqH8dmiNHmBCiTmdtAvmkHw"]
 
 genai.configure(api_key="AIzaSyAsX-SMGt5XlHc6i8TATucxPX3qCDbVyJI")
 
