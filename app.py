@@ -200,3 +200,5 @@ if st.session_state.messages[-1]["role"] != "assistant":
             response = generate_response_with_faiss(prompt, df, embeddings, model, df_tour, embeddings_tour)
             st.write(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
+
+
