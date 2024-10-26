@@ -12,12 +12,9 @@ data_path = './data'
 module_path = './modules'
 
 # Gemini 모델 설정
-import google.generativeai as genai
-
 GOOGLE_API_KEY = st.secrets["API_KEY"]
 
 genai.configure(api_key=GOOGLE_API_KEY)
-
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 # 데이터 로드
@@ -26,7 +23,7 @@ df_tour = pd.read_csv(os.path.join(data_path, "JEJU_TOUR.csv"), encoding='cp949'
 text_tour = df_tour['text'].tolist()
 
 # 최신연월 데이터만 사용
-df = df[df['기준연월'] == df['기준연월'].max()].reset_index(drop=True)
+df = df.loc[df.groupby('가맹점명')['기준연월'].idxmax()].reset_index(drop=True)
 
 # Streamlit App UI
 
@@ -46,7 +43,7 @@ with st.sidebar:
         }
      </style>
      """, unsafe_allow_html=True)
-    
+
     st.sidebar.markdown('<p class="sidebar-text">💵희망 가격대는 어떻게 되시나요??</p>', unsafe_allow_html=True)
 
 
@@ -64,7 +61,7 @@ with st.sidebar:
         price = '중저가'
     elif price == '😂 저가':
         price = '저가'
-        
+
     st.markdown(
         """
          <style>
@@ -120,7 +117,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 embedding_model = AutoModel.from_pretrained(model_name).to(device)
 
 # FAISS 인덱스 로드 함수
-def load_faiss_index(index_path=os.path.join(module_path, 'faiss_index.index')):
+def load_faiss_index(index_path=os.path.join(module_path, 'faiss_index_1.index')):
     if os.path.exists(index_path):
         index = faiss.read_index(index_path)
         return index
@@ -135,21 +132,18 @@ def embed_text(text):
     return embeddings.squeeze().cpu().numpy()
 
 # 텍스트 임베딩 로드
-embeddings = np.load(os.path.join(module_path, 'embeddings_array_file.npy'))
-
-# 관광지 임베딩 로드 및 FAISS 인덱스 생성
-embeddings_tour = embed_text(text_tour)
-index_tour = faiss.IndexFlatL2(embeddings_tour.shape[1])
-index_tour.add(embeddings_tour)
+embeddings = np.load(os.path.join(module_path, 'embeddings_array_file_1.npy'))
+embeddings_tour = np.load(os.path.join(module_path, 'embeddings_tour_array_file_1.npy'))
 
 # FAISS를 활용한 응답 생성
 def generate_response_with_faiss(question, df, embeddings, model, df_tour, embeddings_tour,max_count=10, k=3, print_prompt=True):
     index = load_faiss_index()
     query_embedding = embed_text(question).reshape(1, -1)
     distances, indices = index.search(query_embedding, k * 3)
-    
+
+    index_tour = load_faiss_index(index_path=os.path.join(module_path, 'faiss_tour_index_1.index'))
     query_embedding_tour = embed_text(question).reshape(1, -1)
-    distances_tour, indices_tour = index_tour.search(query_embedding_tour, k)
+    distances_tour, indices_tour = index_tour.search(query_embedding_tour, 1)
 
     filtered_df = df.iloc[indices[0, :]].reset_index(drop=True)
     filtered_df_tour = df_tour.iloc[indices_tour[0, :]].reset_index(drop=True)
@@ -167,17 +161,17 @@ def generate_response_with_faiss(question, df, embeddings, model, df_tour, embed
         filtered_df = filtered_df[filtered_df['건당평균이용금액구간'].str.startswith('2')].reset_index(drop=True)
     elif price == '최저가':
         filtered_df = filtered_df[filtered_df['건당평균이용금액구간'].str.startswith('1')].reset_index(drop=True)
- 
 
-    filtered_df = filtered_df.reset_index(drop=True).head(k * 2)
-    
+
+    filtered_df = filtered_df.reset_index(drop=True).head(k * 3)
+
     if filtered_df.empty:
         return "질문과 일치하는 가게가 없습니다."
 
     reference_info = "\n".join(filtered_df['text'])
     reference_tour = "\n".join(filtered_df_tour['text'])
 
-    prompt = f"""질문: {question}\n대답시 필요한 내용: 근처 음식점을 추천할때는 질문에 주소에 대한 정보가 있다면 음식점의 주소가 비슷한지 확인해.\n가능하면 음식점들의 위도와 경도가 질문의 위도, 경도와 비교해서 가까운 곳으로 추천해줘야해. 차로 얼마나 걸릴지 알려줘. 대답할때 위도, 경도는 안 알려줘도 돼.\n대답해줄때 업종별로 가능하면 하나씩 추천해줘. 그리고 추가적으로 그 중에서 가맹점개점일자가 오래되고 이용건수가 많은 음식점(오래된맛집)과 가맹점개점일자가 최근이고 이용건수가 많은 음식점(새로운맛집)을 각각 추천해줬으면 좋겠어.\n참고할 정보: {reference_info}\n참고할 관광지 정보: {reference_tour}\n응답:"""
+    prompt = f"""질문: {question}\n대답시 필요한 내용: 근처 음식점을 추천할때는 질문에 주소에 대한 정보가 있다면 음식점의 주소가 비슷한지 확인해.\n차로 이동시간이 얼마인지 알려줘. 추천해줄때 이동시간을 고려해서 답변해줘.\n가맹점업종이 커피인 가게는 업종이 카페야. \n대답해줄때 업종별로 가능하면 하나씩 추천해줘. 그리고 추가적으로 그 중에서 가맹점개점일자가 오래되고 이용건수가 많은 음식점(오래된맛집)과 가맹점개점일자가 최근이고 이용건수가 많은 음식점(새로운맛집)을 각각 추천해줬으면 좋겠어.\n참고할 정보: {reference_info}\n참고할 관광지 정보: {reference_tour}\n응답:"""
 
     if print_prompt:
         print('-----------------------------'*3)
@@ -200,5 +194,3 @@ if st.session_state.messages[-1]["role"] != "assistant":
             response = generate_response_with_faiss(prompt, df, embeddings, model, df_tour, embeddings_tour)
             st.write(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
-
-
